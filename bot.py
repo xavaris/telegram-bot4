@@ -83,10 +83,19 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # ------------------------
-# SEND OFFER
+# SEND OFFER (SAFE)
 # ------------------------
 async def send_offer(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = update.message.text.split(" ", 1)[1]
+    full_text = update.message.text
+
+    if full_text.strip() == "/wyslij":
+        await update.message.reply_text(
+            "❗ Najpierw wygeneruj wycenę wpisując adresy,\n"
+            "a potem kliknij wygenerowaną komendę /wyslij."
+        )
+        return
+
+    msg = full_text.replace("/wyslij", "").strip()
 
     user = update.message.from_user
     username = f"@{user.username}" if user.username else user.first_name
