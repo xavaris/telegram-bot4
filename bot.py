@@ -9,7 +9,7 @@ GOOGLE_KEY = os.getenv("GOOGLE_KEY")
 # ADMIN IDs
 ADMIN_IDS = [
     8224330121,   # Pontoderabilia
-    8482440165    # burwusovy
+    8482440165    # Burwusovy
 ]
 
 # ------------------------
@@ -86,7 +86,8 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # SEND OFFER
 # ------------------------
 async def send_offer(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = update.message.text.replace("/wyslij", "").strip()
+    msg = update.message.text.split(" ", 1)[1]
+
     user = update.message.from_user
     username = f"@{user.username}" if user.username else user.first_name
 
