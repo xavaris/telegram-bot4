@@ -6,6 +6,8 @@ from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filte
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GOOGLE_KEY = os.getenv("GOOGLE_KEY")
 
+ADMIN_USERS = ["@Pontoderabilia", "@Burwusovy"]
+
 # ------------------------
 # GOOGLE GEOCODING
 # ------------------------
@@ -55,10 +57,10 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if "-" not in text:
         await update.message.reply_text(
-            "📍 FORMAT:\n"
-            "adres startowy - adres końcowy\n\n"
-            "Przykład:\n"
-            "kartuska 46 gdynia - morska 99 gdynia"
+            "📍 Podaj adresy w formacie:\n\n"
+            "Dzieci Warszawy 43 Warszawa - Czereśniowa 98 Warszawa\n\n"
+            "Ulica numerdomu Miasto - Ulica numerdomu Miasto\n\n"
+            "ℹ️ Cena ma charakter orientacyjny"
         )
         return
 
@@ -70,19 +72,47 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     price = km * 3 + 10
-    forty = round(price * 0.4, 2)
+    fifty = round(price * 0.5, 2)
+    thirtyfive = round(price * 0.35, 2)
 
     await update.message.reply_text(
         f"🚗 Dystans: {round(km,2)} km\n"
-        f"💰 Szacowana cena: {round(price,2)} zł\n"
-        f"🔥 40% ceny: {forty} zł"
+        f"💰 Cena orientacyjna: {round(price,2)} zł\n\n"
+        f"✅ 50% ceny: {fifty} zł\n"
+        f"🔥 35% ceny: {thirtyfive} zł (kurs powyżej 100 zł)\n\n"
+        f"👉 Kliknij aby przesłać ofertę:\n"
+        f"/wyslij {start.strip()} - {end.strip()} | Cena orientacyjna: {round(price,2)} zł"
     )
+
+# ------------------------
+# SEND TO ADMINS
+# ------------------------
+async def send_offer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = update.message.text.replace("/wyslij", "").strip()
+
+    user = update.message.from_user
+    username = f"@{user.username}" if user.username else user.first_name
+
+    for admin in ADMIN_USERS:
+        await context.bot.send_message(
+            chat_id=admin,
+            text=(
+                "📩 NOWE ZAPYTANIE\n"
+                f"👤 Od: {username}\n"
+                f"{msg}"
+            )
+        )
+
+    await update.message.reply_text("✅ Wysłano do obsługi.")
 
 # ------------------------
 # START
 # ------------------------
 if __name__ == "__main__":
     app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    app.add_handler(MessageHandler(filters.Regex("^/wyslij"), send_offer))
     app.add_handler(MessageHandler(filters.TEXT, handle))
+
     print("BOT STARTED")
     app.run_polling()
